@@ -32,10 +32,12 @@ type alias Complex = (Float, Float)
 multCmplx (r1, i1) (r2, i2) = (r1*r2 - i1*i2, r1*i2 + r2*i1)
 addCmplx (r1, i1) (r2, i2) = (r1 + r2, i1 + i2)
 
+absCmplx (r1, i1) = sqrt (r1*r1 + i1*i1)
+
 
 mandelbrot : Complex -> Complex -> Int -> Complex
 mandelbrot z c n = 
-    if n == 0 then
+    if n == 0 || absCmplx(z) <= 2 then
         z
     else
         mandelbrot (addCmplx (multCmplx z z) c) c (n - 1)
