@@ -33,6 +33,13 @@ multCmplx (r1, i1) (r2, i2) = (r1*r2 - i1*i2, r1*i2 + r2*i1)
 addCmplx (r1, i1) (r2, i2) = (r1 + r2, i1 + i2)
 
 
+mandelbrot : Complex -> Complex -> Int -> Complex
+mandelbrot z c n = 
+    if n == 0 then
+        z
+    else
+        mandelbrot (addCmplx (multCmplx z z) c) c (n - 1)
+
 
 init : Model
 init = { 
