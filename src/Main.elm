@@ -24,7 +24,14 @@ update msg model
   = case msg of
       Tick t _   -> {model | time = t}
 
-      
+
+
+type alias Complex = (Float, Float)
+
+-- (a + bi)(c + di) = ac + adi + cbi - db
+multCmplx (r1, i1) (r2, i2) = (r1*r2 - i1*i2, r1*i2 + r2*i1)
+addCmplx (r1, i1) (r2, i2) = (r1 + r2, i1 + i2)
+
 
 
 init : Model
