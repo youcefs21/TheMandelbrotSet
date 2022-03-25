@@ -61,7 +61,7 @@ view model =
     (div [style "width" "700px", style "height" "400px"]) (grid 350 200 model)
     , div []
       [
-        text <| "Zoom: "
+        Html.text <| "Zoom: "
         ,
         input
             [ type_ "range"
@@ -71,10 +71,10 @@ view model =
             , onInput ZoomScroll
             ]
             []
-        , text <| String.fromFloat model.zoom
+        , Html.text <| String.fromFloat model.zoom
       ]        
         , div [] [
-        text <| " Iterations: "
+        Html.text <| " Iterations: "
         , input
             [ type_ "range"
             , Attrs.min "1"
@@ -83,12 +83,12 @@ view model =
             , onInput ItrScroll
             ]
             []
-        , text <| String.fromInt model.itr
+        , Html.text <| String.fromInt model.itr
         ]
       ,
       div []
       [
-      text <| "X-cord: " ++ String.fromFloat model.xShift
+      Html.text <| "X-cord: " ++ String.fromFloat model.xShift
       , input
           [ type_ "range"
           , Attrs.min "-80"
@@ -97,7 +97,7 @@ view model =
           , onInput XShiftScroll
           ]
           []
-      , text <| "Y-cord: " ++ String.fromFloat (model.yShift - 100)
+      , Html.text <| "Y-cord: " ++ String.fromFloat (model.yShift - 100)
       , input
           [ type_ "range"
           , Attrs.min "0"
