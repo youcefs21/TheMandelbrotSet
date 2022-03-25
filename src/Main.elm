@@ -42,14 +42,14 @@ update msg model =
       ( { model | itr = String.toInt s |> Maybe.withDefault 0}
       , Cmd.none
       )
-    CharacterKey 'd' ->
-        ( {model | xShift = model.xShift + 1}, Cmd.none )
     CharacterKey 'a' ->
-        ( {model | xShift = model.xShift - 1}, Cmd.none )
+        ( {model | xShift = model.xShift + 1/model.zoom}, Cmd.none )
+    CharacterKey 'd' ->
+        ( {model | xShift = model.xShift - 1/model.zoom}, Cmd.none )
     CharacterKey 's' ->
-        ( {model | yShift = model.yShift + 1}, Cmd.none )
+        ( {model | yShift = model.yShift + 1/model.zoom}, Cmd.none )
     CharacterKey 'w' ->
-        ( {model | yShift = model.yShift - 1}, Cmd.none )
+        ( {model | yShift = model.yShift - 1/model.zoom}, Cmd.none )
     CharacterKey 'q' ->
         ( {model | zoom = model.zoom - 1}, Cmd.none )
     CharacterKey 'e' ->
@@ -139,20 +139,33 @@ mandelbrot z c n =
 
 
 
+-- x is from 1 to gX
+-- y is from 1 to gY
+-- we want to fit x into -gX/zoom to gX/zoom
+-- we want to fit y into -gY/zoom to gY/zoom
+-- x = (x - gX/2)/zoom - xShift
+-- y = (y - gY/2)/zoom - yShift
 
 
-mandelbrotColor x y model =  if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) == 0 then
-  "black"
- else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 2)) then
-  "Gold"
- else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 4)) then
-  "red"
- else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 6)) then
-  "orange"
-  else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 8)) then
-  "green"
- else
-  "blue"
+-- test cases:
+-- -16 to 16             start       
+-- -2 to 2               devide by 8
+-- 4 to 8                add 6
+
+-- -16 to 16                 start
+-- -0.5 to 0.5               devide by 32
+-- 5.5 to 6.5                add 6
+-- range is maintaned!
+
+mandelbrotColor x y model = 
+  let
+    nX = ((gX - x)/2)/model.zoom - model.xShift
+    nY = ((y - gY)/2)/model.zoom - model.yShift
+  in
+    if (mandelbrot (0,0) (nX,nY) model.itr) == 0 then
+      "black"
+    else
+      "blue"
 
 
 type alias Model =
@@ -169,8 +182,8 @@ init _ =
     {
       time = Time.millisToPosix 0,
       zoom = 40,
-      xShift = 30,
-      yShift = 100,
+      xShift = 0,
+      yShift = 0,
       itr = 10
     }
   , Cmd.none
