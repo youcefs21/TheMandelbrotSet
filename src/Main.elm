@@ -23,7 +23,7 @@ update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
   case msg of
     Tick t ->
-      ( { model | time = t, col = if model.col == "orange" then "blue" else "orange" }
+      ( { model | time = t}
       , Cmd.none
       )
     ZoomScroll s ->
@@ -72,8 +72,9 @@ view model =
             ]
             []
         , Html.text <| String.fromFloat model.zoom
-      ]        
-        , div [] [
+      ]
+    , div []
+      [
         Html.text <| " Iterations: "
         , input
             [ type_ "range"
@@ -84,28 +85,33 @@ view model =
             ]
             []
         , Html.text <| String.fromInt model.itr
-        ]
+      ]
       ,
       div []
       [
-      Html.text <| "X-cord: " ++ String.fromFloat model.xShift
-      , input
-          [ type_ "range"
-          , Attrs.min "-80"
-          , Attrs.max "50"
-          , value <| String.fromFloat (model.xShift - 30)
-          , onInput XShiftScroll
-          ]
-          []
-      , Html.text <| "Y-cord: " ++ String.fromFloat (model.yShift - 100)
-      , input
-          [ type_ "range"
-          , Attrs.min "0"
-          , Attrs.max "200"
-          , value <| String.fromFloat model.yShift
-          , onInput YShiftScroll
-          ]
-          []
+        Html.text <| "X-cord: "
+        , input
+            [ type_ "range"
+            , Attrs.min "-80"
+            , Attrs.max "50"
+            , value <| String.fromFloat model.xShift
+            , onInput XShiftScroll
+            ]
+            []
+        , Html.text <| String.fromFloat (model.xShift - 30)
+      ],
+      div []
+      [
+        Html.text <| "Y-cord: "
+        , input
+            [ type_ "range"
+            , Attrs.min "0"
+            , Attrs.max "200"
+            , value <| String.fromFloat model.yShift
+            , onInput YShiftScroll
+            ]
+            []
+        , Html.text <| String.fromFloat (model.yShift - 100)
       ]
   ]
     
@@ -147,8 +153,7 @@ mandelbrotColor x y model =  if (mandelbrot (0,0) (model.xShift/50  -  (x/model.
 
 
 type alias Model =
-  { col : String
-  , time : Time.Posix
+  { time : Time.Posix
   , zoom : Float
   , xShift : Float
   , yShift : Float
@@ -157,7 +162,14 @@ type alias Model =
 
 init : () -> (Model, Cmd Msg)
 init _ =
-  ( Model "orange" (Time.millisToPosix 0) 80 30 100 100
+  ( 
+    {
+      time = Time.millisToPosix 0,
+      zoom = 80,
+      xShift = 30,
+      yShift = 100,
+      itr = 10
+    }
   , Cmd.none
   )
 
