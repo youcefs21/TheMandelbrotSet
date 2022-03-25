@@ -153,14 +153,14 @@ mandelbrot z c n =
 -- 4 to 8                add 6
 
 -- -16 to 16                 start
--- -0.5 to 0.5               devide by 32
--- 5.5 to 6.5                add 6
+-- -0.25 to 0.25               devide by 64
+-- 5.75 to 6.25                add 6
 -- range is maintaned!
 
 mandelbrotColor x y model = 
   let
-    nX = ((gX - x)/2)/model.zoom - model.xShift
-    nY = ((y - gY)/2)/model.zoom - model.yShift
+    nX = (gX/2 - x)/model.zoom - model.xShift
+    nY = (y - gY/2)/model.zoom - model.yShift
   in
     if (mandelbrot (0,0) (nX,nY) model.itr) == 0 then
       "black"
