@@ -35,7 +35,7 @@ update msg model =
       , Cmd.none
       )
     ZoomScroll s ->
-      ( { model | zoom = String.toFloat s |> Maybe.withDefault 80}
+      ( { model | zoom = String.toFloat s |> Maybe.withDefault 40}
       , Cmd.none
       )
     ItrScroll s ->
@@ -43,17 +43,17 @@ update msg model =
       , Cmd.none
       )
     CharacterKey 'a' ->
-        ( {model | xShift = model.xShift + 1/model.zoom}, Cmd.none )
+        ( {model | xShift = model.xShift + 2/model.zoom}, Cmd.none )
     CharacterKey 'd' ->
-        ( {model | xShift = model.xShift - 1/model.zoom}, Cmd.none )
-    CharacterKey 's' ->
-        ( {model | yShift = model.yShift + 1/model.zoom}, Cmd.none )
+        ( {model | xShift = model.xShift - 2/model.zoom}, Cmd.none )
     CharacterKey 'w' ->
-        ( {model | yShift = model.yShift - 1/model.zoom}, Cmd.none )
+        ( {model | yShift = model.yShift + 2/model.zoom}, Cmd.none )
+    CharacterKey 's' ->
+        ( {model | yShift = model.yShift - 2/model.zoom}, Cmd.none )
     CharacterKey 'q' ->
-        ( {model | zoom = model.zoom - 1}, Cmd.none )
+        ( {model | zoom = model.zoom * 0.9}, Cmd.none )
     CharacterKey 'e' ->
-        ( {model | zoom = model.zoom + 1}, Cmd.none )
+        ( {model | zoom = model.zoom * 1.1}, Cmd.none )
     _ ->
         ( model, Cmd.none )
 
@@ -82,13 +82,13 @@ view model =
         ,
         input
             [ type_ "range"
-            , Attrs.min "80"
-            , Attrs.max "1000"
+            , Attrs.min "20"
+            , Attrs.max "3000"
             , value <| String.fromFloat model.zoom
             , onInput ZoomScroll
             ]
             []
-        , Html.text <| String.fromFloat model.zoom
+        , Html.text <| String.fromFloat <| toFloat <| round model.zoom
       ]
     , div []
       [
@@ -107,12 +107,12 @@ view model =
       div []
       [
         Html.text <| "X-cord: "
-        , Html.text <| String.fromFloat (model.xShift - 30)
+        , Html.text <| String.fromFloat <| (toFloat <| round (model.xShift*100))/100
       ],
       div []
       [
         Html.text <| "Y-cord: "
-        , Html.text <| String.fromFloat (model.yShift - 100)
+        , Html.text <| String.fromFloat <| (toFloat <| round (model.yShift*100))/100
       ]
   ]
     
@@ -160,7 +160,7 @@ mandelbrot z c n =
 mandelbrotColor x y model = 
   let
     nX = (gX/2 - x)/model.zoom - model.xShift
-    nY = (y - gY/2)/model.zoom - model.yShift
+    nY = (gY/2 - y)/model.zoom - model.yShift
   in
     if (mandelbrot (0,0) (nX,nY) model.itr) == 0 then
       "black"
