@@ -1,10 +1,13 @@
 module Main exposing (..)
 
 import Browser
+import Browser.Events exposing (onKeyPress)
 import Html exposing (..)
 import Html.Events exposing (onInput)
 import Html.Attributes as Attrs exposing (..)
 import Time
+import Platform.Sub exposing (batch)
+import Json.Decode as Decode
 
 
 main = Browser.element
@@ -17,7 +20,12 @@ main = Browser.element
 
 
 
-type Msg = Tick Time.Posix | ZoomScroll String | XShiftScroll String | YShiftScroll String | ItrScroll String
+type Msg = 
+  Tick Time.Posix     | 
+  ZoomScroll String   | 
+  ItrScroll String    | 
+  CharacterKey Char   | 
+  ControlKey String
 
 update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
@@ -30,35 +38,44 @@ update msg model =
       ( { model | zoom = String.toFloat s |> Maybe.withDefault 80}
       , Cmd.none
       )
-    XShiftScroll s ->
-      ( { model | xShift = String.toFloat s |> Maybe.withDefault 0}
-      , Cmd.none
-      )
-    YShiftScroll s ->
-      ( { model | yShift = String.toFloat s |> Maybe.withDefault 100}
-      , Cmd.none
-      )
     ItrScroll s ->
       ( { model | itr = String.toInt s |> Maybe.withDefault 0}
       , Cmd.none
       )
+    CharacterKey 'd' ->
+        ( {model | xShift = model.xShift + 1}, Cmd.none )
+    CharacterKey 'a' ->
+        ( {model | xShift = model.xShift - 1}, Cmd.none )
+    CharacterKey 's' ->
+        ( {model | yShift = model.yShift + 1}, Cmd.none )
+    CharacterKey 'w' ->
+        ( {model | yShift = model.yShift - 1}, Cmd.none )
+    CharacterKey 'q' ->
+        ( {model | zoom = model.zoom - 1}, Cmd.none )
+    CharacterKey 'e' ->
+        ( {model | zoom = model.zoom + 1}, Cmd.none )
+    _ ->
+        ( model, Cmd.none )
 
 pixels x y model = if x == 1 then
-    [div [style "width" "2px", style "height" "2px", style "float" "left", style "background" (mandelbrotColor x y model)] []]
+    [div [style "width" "4px", style "height" "4px", style "float" "left", style "background" (mandelbrotColor x y model)] []]
   else
-    (div [style "width" "2px", style "height" "2px", style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
+    (div [style "width" "4px", style "height" "4px", style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
 
 grid x y model = if y == 1 then
     pixels x y model
   else
     pixels x y model ++ grid x (y - 1) model
 
+gX = 175
+gY = 100
+
 
 view : Model -> Html Msg
 view model =
   div [align "center",  style "padding" "70px 0"] 
   [
-    (div [style "width" "700px", style "height" "400px"]) (grid 350 200 model)
+    (div [style "width" "700px", style "height" "400px"]) (grid gX gY model)
     , div []
       [
         Html.text <| "Zoom: "
@@ -90,27 +107,11 @@ view model =
       div []
       [
         Html.text <| "X-cord: "
-        , input
-            [ type_ "range"
-            , Attrs.min "-80"
-            , Attrs.max "50"
-            , value <| String.fromFloat model.xShift
-            , onInput XShiftScroll
-            ]
-            []
         , Html.text <| String.fromFloat (model.xShift - 30)
       ],
       div []
       [
         Html.text <| "Y-cord: "
-        , input
-            [ type_ "range"
-            , Attrs.min "0"
-            , Attrs.max "200"
-            , value <| String.fromFloat model.yShift
-            , onInput YShiftScroll
-            ]
-            []
         , Html.text <| String.fromFloat (model.yShift - 100)
       ]
   ]
@@ -138,15 +139,17 @@ mandelbrot z c n =
 
 
 
-mandelbrotColor x y model =  if (mandelbrot (0,0) (model.xShift/50  -  (x/model.zoom),(y - model.yShift)/model.zoom) model.itr) == 0 then
+
+
+mandelbrotColor x y model =  if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) == 0 then
   "black"
- else if (mandelbrot (0,0) (model.xShift/50  -  (x/model.zoom),(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 2)) then
+ else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 2)) then
   "Gold"
- else if (mandelbrot (0,0) (model.xShift/50  -  (x/model.zoom),(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 4)) then
+ else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 4)) then
   "red"
- else if (mandelbrot (0,0) (model.xShift/50  -  (x/model.zoom),(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 6)) then
+ else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 6)) then
   "orange"
- else if (mandelbrot (0,0) (model.xShift/50  -  (x/model.zoom),(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 8)) then
+  else if (mandelbrot (0,0) ((model.xShift - x)/model.zoom,(y - model.yShift)/model.zoom) model.itr) < (model.itr - (model.itr // 8)) then
   "green"
  else
   "blue"
@@ -165,7 +168,7 @@ init _ =
   ( 
     {
       time = Time.millisToPosix 0,
-      zoom = 80,
+      zoom = 40,
       xShift = 30,
       yShift = 100,
       itr = 10
@@ -174,4 +177,21 @@ init _ =
   )
 
 subscriptions : Model -> Sub Msg
-subscriptions _ = Time.every 50 Tick
+subscriptions _ = batch [
+    Time.every 50 Tick, 
+    onKeyPress keyDecoder
+  ]
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map toKey (Decode.field "key" Decode.string)
+
+
+toKey : String -> Msg
+toKey keyValue =
+    case String.uncons keyValue of
+        Just ( char, "" ) ->
+            CharacterKey char
+
+        _ ->
+            ControlKey keyValue
