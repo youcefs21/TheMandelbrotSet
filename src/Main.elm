@@ -39,7 +39,7 @@ update msg model =
       , Cmd.none
       )
     ToggleDensity ->
-      ( { model | density = if model.density == 4 then 2 else 4}
+      ( { model | density = if model.density == 4 then 2 else if model.density == 20 then 4 else 20}
       , Cmd.none
       )
     CharacterKey 'a' ->
@@ -62,7 +62,7 @@ pixels x y model =
   let
     pxS = ((String.fromInt model.density) ++ "px")
   in
-    if x == Basics.min (model.density - 2) 1 then
+    if x == Basics.min (model.density - 3) 1 then
       [div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []]
     else
       (div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
