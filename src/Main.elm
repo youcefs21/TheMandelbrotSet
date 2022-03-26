@@ -106,7 +106,35 @@ view model =
         Html.text <| "Y-cord: "
         , Html.text <| String.fromFloat <| (toFloat <| round (model.yShift*1000))/1000
       ],
-      button [onClick ToggleDensity] [text "Resolution"]
+      button [onClick ToggleDensity] [Html.text "Resolution"],
+      h2 []
+      [
+        Html.text <| "Controls "
+      ],
+      table [style "border" "1px solid black", style "width" "50%", style "text-align" "center"]
+      [
+        tr []
+        [
+          th [style "border" "1px solid black"] [Html.text <|"Button"],
+          th [style "border" "1px solid black"] [Html.text <|"Description"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"w, a, s, d"],
+          td [style "border" "1px solid black"] [Html.text <|"move up, left, down, right respectivly"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"q"],
+          td [style "border" "1px solid black"] [Html.text <|"zoom out"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"e"],
+          td [style "border" "1px solid black"] [Html.text <|"zoom in"]
+        ]
+      ]
+
   ]
     
 type alias Complex = (Float, Float)
