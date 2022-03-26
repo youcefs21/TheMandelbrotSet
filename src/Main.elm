@@ -31,18 +31,9 @@ update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
   case msg of
     Tick t ->
-      let
-        newDensity = 
-           if model.idleTime < 100 then
-              4
-           else if model.idleTime < 200 then
-              2
-           else
-              1
-      in
-        ( { model | time = t, idleTime = model.idleTime+1, density = newDensity}
-        , Cmd.none
-        )
+      ( { model | time = t, itr = model.itr+1}
+      , Cmd.none
+      )
     ZoomScroll s ->
       ( { model | zoom = String.toFloat s |> Maybe.withDefault 40}
       , Cmd.none
@@ -52,17 +43,17 @@ update msg model =
       , Cmd.none
       )
     CharacterKey 'a' ->
-        ( {model | xShift = model.xShift + 4/model.zoom, idleTime=0, density=4}, Cmd.none )
+        ( {model | xShift = model.xShift + 4/model.zoom, idleTime=0}, Cmd.none )
     CharacterKey 'd' ->
-        ( {model | xShift = model.xShift - 4/model.zoom, idleTime=0, density=4}, Cmd.none )
+        ( {model | xShift = model.xShift - 4/model.zoom, idleTime=0}, Cmd.none )
     CharacterKey 'w' ->
-        ( {model | yShift = model.yShift + 4/model.zoom, idleTime=0, density=4}, Cmd.none )
+        ( {model | yShift = model.yShift + 4/model.zoom, idleTime=0}, Cmd.none )
     CharacterKey 's' ->
-        ( {model | yShift = model.yShift - 4/model.zoom, idleTime=0, density=4}, Cmd.none )
+        ( {model | yShift = model.yShift - 4/model.zoom, idleTime=0}, Cmd.none )
     CharacterKey 'q' ->
-        ( {model | zoom = model.zoom * 0.9, idleTime=0, density=4}, Cmd.none )
+        ( {model | zoom = model.zoom * 0.9, idleTime=0}, Cmd.none )
     CharacterKey 'e' ->
-        ( {model | zoom = model.zoom * 1.1, idleTime=0, density=4}, Cmd.none )
+        ( {model | zoom = model.zoom * 1.1, idleTime=0}, Cmd.none )
     _ ->
         ( model, Cmd.none )
 
@@ -111,7 +102,7 @@ view model =
         , input
             [ type_ "range"
             , Attrs.min "1"
-            , Attrs.max "360"
+            , Attrs.max "800"
             , value <| String.fromInt model.itr
             , onInput ItrScroll
             ]
@@ -147,7 +138,7 @@ mandelbrot z c n =
     newZ = (addCmplx (multCmplx z z) c)
   in
 
-    if n == 0 || absCmplx(newZ) > 2 then
+    if n == 0 || absCmplx(newZ) > 5 then
         n
     else
         mandelbrot newZ c (n - 1)
@@ -182,7 +173,7 @@ mandelbrotColor x y model =
     if n == model.itr then
       "black"
     else
-      "hsl(" ++ (String.fromFloat (360*(toFloat<|n)/(toFloat model.itr))) ++ ", 100%, 70%)"
+      "hsl(" ++ (String.fromInt (modBy 360 <| round <| (sqrt (toFloat (300*n)) ))) ++ ", 100%, 70%)"
 
 
 type alias Model =
@@ -200,11 +191,11 @@ init _ =
   ( 
     {
       time = Time.millisToPosix 0,
-      zoom = 40,
+      zoom = 200,
       xShift = 0,
       yShift = 0,
-      itr = 80,
-      density = 8,
+      itr = 1,
+      density = 2,
       idleTime = 0
     }
   , Cmd.none
