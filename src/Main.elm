@@ -57,25 +57,31 @@ update msg model =
     _ ->
         ( model, Cmd.none )
 
-pixels x y model = if x == 1 then
-    [div [style "width" "4px", style "height" "4px", style "float" "left", style "background" (mandelbrotColor x y model)] []]
-  else
-    (div [style "width" "4px", style "height" "4px", style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
+pixels : Int -> Int -> Model -> List (Html Msg)
+pixels x y model = 
+  let
+    pxS = ((String.fromInt model.density) ++ "px")
+  in
+    if x == 1 then
+      [div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []]
+    else
+      (div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
 
+grid : Int -> Int -> Model -> List (Html Msg)
 grid x y model = if y == 1 then
     pixels x y model
   else
     pixels x y model ++ grid x (y - 1) model
 
-gX = 175
-gY = 100
+gX = 700
+gY = 400
 
 
 view : Model -> Html Msg
 view model =
   div [align "center",  style "padding" "70px 0"] 
   [
-    (div [style "width" "700px", style "height" "400px"]) (grid gX gY model)
+    (div [style "width" "700px", style "height" "400px"]) (grid (gX//model.density) (gY//model.density) model)
     , div []
       [
         Html.text <| "Zoom: "
@@ -157,10 +163,11 @@ mandelbrot z c n =
 -- 5.75 to 6.25                add 6
 -- range is maintaned!
 
+mandelbrotColor : Int -> Int -> Model -> String
 mandelbrotColor x y model = 
   let
-    nX = (gX/2 - x)/model.zoom - model.xShift
-    nY = (gY/2 - y)/model.zoom - model.yShift
+    nX = (gX/(2 * toFloat model.density) - toFloat x)/model.zoom - model.xShift
+    nY = (gY/(2 * toFloat model.density) - toFloat y)/model.zoom - model.yShift
     n = model.itr - (mandelbrot (0,0) (nX,nY) model.itr)
   in
     if n == model.itr then
@@ -170,11 +177,12 @@ mandelbrotColor x y model =
 
 
 type alias Model =
-  { time : Time.Posix
-  , zoom : Float
-  , xShift : Float
-  , yShift : Float
-  , itr : Int
+  { time    : Time.Posix
+  , zoom    : Float
+  , xShift  : Float
+  , yShift  : Float
+  , itr     : Int
+  , density : Int
   }
 
 init : () -> (Model, Cmd Msg)
@@ -185,7 +193,8 @@ init _ =
       zoom = 40,
       xShift = 0,
       yShift = 0,
-      itr = 10
+      itr = 80,
+      density = 4
     }
   , Cmd.none
   )
