@@ -3,7 +3,7 @@ module Main exposing (..)
 import Browser
 import Browser.Events exposing (onKeyPress)
 import Html exposing (..)
-import Html.Events exposing (onInput)
+import Html.Events exposing (onInput, onClick)
 import Html.Attributes as Attrs exposing (..)
 import Time
 import Platform.Sub exposing (batch)
@@ -22,7 +22,8 @@ main = Browser.element
 
 type Msg = 
   Tick Time.Posix     | 
-  ItrScroll String    | 
+  ItrScroll String    |
+  ToggleDensity       |
   CharacterKey Char   | 
   ControlKey String
 
@@ -37,18 +38,22 @@ update msg model =
       ( { model | itr = String.toInt s |> Maybe.withDefault 0}
       , Cmd.none
       )
+    ToggleDensity ->
+      ( { model | density = if model.density == 4 then 2 else 4}
+      , Cmd.none
+      )
     CharacterKey 'a' ->
-        ( {model | xShift = model.xShift + 4/model.zoom, idleTime=0}, Cmd.none )
+        ( {model | xShift = model.xShift + 4/model.zoom}, Cmd.none )
     CharacterKey 'd' ->
-        ( {model | xShift = model.xShift - 4/model.zoom, idleTime=0}, Cmd.none )
+        ( {model | xShift = model.xShift - 4/model.zoom}, Cmd.none )
     CharacterKey 'w' ->
-        ( {model | yShift = model.yShift + 4/model.zoom, idleTime=0}, Cmd.none )
+        ( {model | yShift = model.yShift + 4/model.zoom}, Cmd.none )
     CharacterKey 's' ->
-        ( {model | yShift = model.yShift - 4/model.zoom, idleTime=0}, Cmd.none )
+        ( {model | yShift = model.yShift - 4/model.zoom}, Cmd.none )
     CharacterKey 'q' ->
-        ( {model | zoom = model.zoom * 0.9, idleTime=0}, Cmd.none )
+        ( {model | zoom = model.zoom * 0.9}, Cmd.none )
     CharacterKey 'e' ->
-        ( {model | zoom = model.zoom * 1.1, idleTime=0}, Cmd.none )
+        ( {model | zoom = model.zoom * 1.1}, Cmd.none )
     _ ->
         ( model, Cmd.none )
 
@@ -100,7 +105,8 @@ view model =
       [
         Html.text <| "Y-cord: "
         , Html.text <| String.fromFloat <| (toFloat <| round (model.yShift*1000))/1000
-      ]
+      ],
+      button [onClick ToggleDensity] [text "Resolution"]
   ]
     
 type alias Complex = (Float, Float)
@@ -164,7 +170,6 @@ type alias Model =
   , yShift   : Float
   , itr      : Int
   , density  : Int
-  , idleTime : Int
   }
 
 init : () -> (Model, Cmd Msg)
@@ -176,8 +181,7 @@ init _ =
       xShift = 0,
       yShift = 0,
       itr = 1,
-      density = 4,
-      idleTime = 0
+      density = 4
     }
   , Cmd.none
   )
