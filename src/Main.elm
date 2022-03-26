@@ -22,7 +22,6 @@ main = Browser.element
 
 type Msg = 
   Tick Time.Posix     | 
-  ZoomScroll String   | 
   ItrScroll String    | 
   CharacterKey Char   | 
   ControlKey String
@@ -32,10 +31,6 @@ update msg model =
   case msg of
     Tick t ->
       ( { model | time = t, itr = model.itr+1}
-      , Cmd.none
-      )
-    ZoomScroll s ->
-      ( { model | zoom = String.toFloat s |> Maybe.withDefault 40}
       , Cmd.none
       )
     ItrScroll s ->
@@ -84,20 +79,6 @@ view model =
     (div [style "width" "700px", style "height" "400px"]) (grid (gX//model.density) (gY//model.density) model)
     , div []
       [
-        Html.text <| "Zoom: "
-        ,
-        input
-            [ type_ "range"
-            , Attrs.min "20"
-            , Attrs.max "3000"
-            , value <| String.fromFloat model.zoom
-            , onInput ZoomScroll
-            ]
-            []
-        , Html.text <| String.fromFloat <| toFloat <| round model.zoom
-      ]
-    , div []
-      [
         Html.text <| " Iterations: "
         , input
             [ type_ "range"
@@ -113,12 +94,12 @@ view model =
       div []
       [
         Html.text <| "X-cord: "
-        , Html.text <| String.fromFloat <| (toFloat <| round (model.xShift*100))/100
+        , Html.text <| String.fromFloat <| (toFloat <| round (model.xShift*1000))/1000
       ],
       div []
       [
         Html.text <| "Y-cord: "
-        , Html.text <| String.fromFloat <| (toFloat <| round (model.yShift*100))/100
+        , Html.text <| String.fromFloat <| (toFloat <| round (model.yShift*1000))/1000
       ]
   ]
     
@@ -195,7 +176,7 @@ init _ =
       xShift = 0,
       yShift = 0,
       itr = 1,
-      density = 2,
+      density = 4,
       idleTime = 0
     }
   , Cmd.none
