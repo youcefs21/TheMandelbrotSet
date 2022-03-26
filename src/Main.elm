@@ -31,9 +31,14 @@ update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
   case msg of
     Tick t ->
-      ( { model | time = t, itr = model.itr+1}
-      , Cmd.none
-      )
+      if (model.itr < 1000) && model.autoItr then
+        ( { model | time = t, itr = model.itr+1}
+        , Cmd.none
+        )
+      else
+        ( { model | time = t}
+        , Cmd.none
+        )
     ItrScroll s ->
       ( { model | itr = String.toInt s |> Maybe.withDefault 0}
       , Cmd.none
@@ -54,6 +59,12 @@ update msg model =
         ( {model | zoom = model.zoom * 0.9}, Cmd.none )
     CharacterKey 'e' ->
         ( {model | zoom = model.zoom * 1.1}, Cmd.none )
+    CharacterKey 'k' ->
+        ( {model | itr = Basics.min (model.itr + 1) 1000 }, Cmd.none )
+    CharacterKey 'j' ->
+        ( {model | itr = Basics.max (model.itr - 1) 1}, Cmd.none )
+    CharacterKey 'p' ->
+        ( {model | autoItr = not model.autoItr}, Cmd.none )
     _ ->
         ( model, Cmd.none )
 
@@ -62,7 +73,7 @@ pixels x y model =
   let
     pxS = ((String.fromInt model.density) ++ "px")
   in
-    if x == Basics.min (model.density - 3) 1 then
+    if x == 1 then
       [div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []]
     else
       (div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
@@ -81,14 +92,15 @@ view : Model -> Html Msg
 view model =
   div [align "center",  style "padding" "70px 0"] 
   [
-    (div [style "width" "700px", style "height" "400px"]) (grid (gX//model.density) (gY//model.density) model)
+    h1 [] [Html.text "The Mandelbrot Set"]
+    , (div [style "width" "700px", style "height" "400px"]) (grid (gX//model.density) (gY//model.density) model)
     , div []
       [
         Html.text <| " Iterations: "
         , input
             [ type_ "range"
             , Attrs.min "1"
-            , Attrs.max "800"
+            , Attrs.max "1000"
             , value <| String.fromInt model.itr
             , onInput ItrScroll
             ]
@@ -121,17 +133,43 @@ view model =
         tr []
         [
           td [style "border" "1px solid black"] [Html.text <|"w, a, s, d"],
-          td [style "border" "1px solid black"] [Html.text <|"move up, left, down, right respectivly"]
+          td [style "border" "1px solid black"] [Html.text <|"Move up, left, down, right respectivly"]
         ],
         tr []
         [
           td [style "border" "1px solid black"] [Html.text <|"q"],
-          td [style "border" "1px solid black"] [Html.text <|"zoom out"]
+          td [style "border" "1px solid black"] [Html.text <|"Zoom out"]
         ],
         tr []
         [
           td [style "border" "1px solid black"] [Html.text <|"e"],
-          td [style "border" "1px solid black"] [Html.text <|"zoom in"]
+          td [style "border" "1px solid black"] [Html.text <|"Zoom in"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"Resolution"],
+          td [style "border" "1px solid black"] [
+            Html.span [style "color" "orange"] [Html.text <|"WARNING: slow operation, use with caution"],
+            Html.br [] [], 
+            Html.text <|"Cycles 200px -> 400px -> 20px -> 200px",
+            Html.br [] [], 
+            Html.text <|"Defualt height is 200px"
+            ]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"k"],
+          td [style "border" "1px solid black"] [Html.text <|"Increase Iterations"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"j"],
+          td [style "border" "1px solid black"] [Html.text <|"Decrease Iterations"]
+        ],
+        tr []
+        [
+          td [style "border" "1px solid black"] [Html.text <|"p"],
+          td [style "border" "1px solid black"] [Html.text <|"play/pause auto-iterations"]
         ]
       ]
 
@@ -198,6 +236,7 @@ type alias Model =
   , yShift   : Float
   , itr      : Int
   , density  : Int
+  , autoItr  : Bool
   }
 
 init : () -> (Model, Cmd Msg)
@@ -205,11 +244,12 @@ init _ =
   ( 
     {
       time = Time.millisToPosix 0,
-      zoom = 200,
+      zoom = 150,
       xShift = 0,
       yShift = 0,
-      itr = 1,
-      density = 4
+      itr = 10,
+      density = 4,
+      autoItr = False
     }
   , Cmd.none
   )
