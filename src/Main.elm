@@ -31,9 +31,18 @@ update : Msg -> Model -> (Model, Cmd msg)
 update msg model =
   case msg of
     Tick t ->
-      ( { model | time = t}
-      , Cmd.none
-      )
+      let
+        newDensity = 
+           if model.idleTime < 100 then
+              4
+           else if model.idleTime < 200 then
+              2
+           else
+              1
+      in
+        ( { model | time = t, idleTime = model.idleTime+1, density = newDensity}
+        , Cmd.none
+        )
     ZoomScroll s ->
       ( { model | zoom = String.toFloat s |> Maybe.withDefault 40}
       , Cmd.none
@@ -43,17 +52,17 @@ update msg model =
       , Cmd.none
       )
     CharacterKey 'a' ->
-        ( {model | xShift = model.xShift + 2/model.zoom}, Cmd.none )
+        ( {model | xShift = model.xShift + 4/model.zoom, idleTime=0, density=4}, Cmd.none )
     CharacterKey 'd' ->
-        ( {model | xShift = model.xShift - 2/model.zoom}, Cmd.none )
+        ( {model | xShift = model.xShift - 4/model.zoom, idleTime=0, density=4}, Cmd.none )
     CharacterKey 'w' ->
-        ( {model | yShift = model.yShift + 2/model.zoom}, Cmd.none )
+        ( {model | yShift = model.yShift + 4/model.zoom, idleTime=0, density=4}, Cmd.none )
     CharacterKey 's' ->
-        ( {model | yShift = model.yShift - 2/model.zoom}, Cmd.none )
+        ( {model | yShift = model.yShift - 4/model.zoom, idleTime=0, density=4}, Cmd.none )
     CharacterKey 'q' ->
-        ( {model | zoom = model.zoom * 0.9}, Cmd.none )
+        ( {model | zoom = model.zoom * 0.9, idleTime=0, density=4}, Cmd.none )
     CharacterKey 'e' ->
-        ( {model | zoom = model.zoom * 1.1}, Cmd.none )
+        ( {model | zoom = model.zoom * 1.1, idleTime=0, density=4}, Cmd.none )
     _ ->
         ( model, Cmd.none )
 
@@ -62,7 +71,7 @@ pixels x y model =
   let
     pxS = ((String.fromInt model.density) ++ "px")
   in
-    if x == 1 then
+    if x == Basics.min (model.density - 2) 1 then
       [div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []]
     else
       (div [style "width" pxS, style "height" pxS, style "float" "left", style "background" (mandelbrotColor x y model)] []) :: pixels (x - 1) y model
@@ -166,8 +175,8 @@ mandelbrot z c n =
 mandelbrotColor : Int -> Int -> Model -> String
 mandelbrotColor x y model = 
   let
-    nX = (gX/(2 * toFloat model.density) - toFloat x)/model.zoom - model.xShift
-    nY = (gY/(2 * toFloat model.density) - toFloat y)/model.zoom - model.yShift
+    nX = (gX/(2 * toFloat model.density) - toFloat x)/(model.zoom / toFloat model.density) - model.xShift
+    nY = (gY/(2 * toFloat model.density) - toFloat y)/(model.zoom / toFloat model.density) - model.yShift
     n = model.itr - (mandelbrot (0,0) (nX,nY) model.itr)
   in
     if n == model.itr then
@@ -177,12 +186,13 @@ mandelbrotColor x y model =
 
 
 type alias Model =
-  { time    : Time.Posix
-  , zoom    : Float
-  , xShift  : Float
-  , yShift  : Float
-  , itr     : Int
-  , density : Int
+  { time     : Time.Posix
+  , zoom     : Float
+  , xShift   : Float
+  , yShift   : Float
+  , itr      : Int
+  , density  : Int
+  , idleTime : Int
   }
 
 init : () -> (Model, Cmd Msg)
@@ -194,7 +204,8 @@ init _ =
       xShift = 0,
       yShift = 0,
       itr = 80,
-      density = 4
+      density = 8,
+      idleTime = 0
     }
   , Cmd.none
   )
