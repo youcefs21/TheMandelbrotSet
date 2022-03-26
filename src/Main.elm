@@ -96,7 +96,7 @@ view model =
         , input
             [ type_ "range"
             , Attrs.min "1"
-            , Attrs.max "200"
+            , Attrs.max "360"
             , value <| String.fromInt model.itr
             , onInput ItrScroll
             ]
@@ -161,11 +161,12 @@ mandelbrotColor x y model =
   let
     nX = (gX/2 - x)/model.zoom - model.xShift
     nY = (gY/2 - y)/model.zoom - model.yShift
+    n = model.itr - (mandelbrot (0,0) (nX,nY) model.itr)
   in
-    if (mandelbrot (0,0) (nX,nY) model.itr) == 0 then
+    if n == model.itr then
       "black"
     else
-      "blue"
+      "hsl(" ++ (String.fromFloat (360*(toFloat<|n)/(toFloat model.itr))) ++ ", 100%, 70%)"
 
 
 type alias Model =
